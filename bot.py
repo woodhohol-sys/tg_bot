@@ -644,3 +644,6 @@ async def main():
     await dp.start_polling(bot, skip_updates=True, allowed_updates=[])
     print("✅ Bot started polling - Auto-mailing READY!")
 
+# УДАЛИТЕ весь код после этой функции!
+# НЕ ДОЛЖНО БЫТЬ никакого finally или await client.stop()
+
