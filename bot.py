@@ -652,11 +652,13 @@ async def main():
     await client.start()
     logger.info("✅ User client started successfully")
     
-    # Start bot polling
-    await dp.start_polling(bot)
+    # 🔴 ВАЖНО: Очищаем старую сессию бота
+    try:
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("📭 Старая сессия бота очищена")
+    except Exception as e:
+        logger.warning(f"⚠️ Не удалось очистить сессию: {e}")
+    
+    # 🔴 ВАЖНО: Запускаем с skip_updates=True
+    await dp.start_polling(bot, skip_updates=True)
     logger.info("✅ Bot started polling - Auto-mailing READY!")
-
-if __name__ == '__main__':
-    # Run the bot
-
-    asyncio.run(main())
