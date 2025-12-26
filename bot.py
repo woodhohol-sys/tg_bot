@@ -1,28 +1,4 @@
-# ============ НАЧАЛО: КОД ДЛЯ RENDER ============
-import threading
-from flask import Flask
-import os
 
-# Создаём простой Flask сервер для Render
-flask_app = Flask(__name__)
-
-@flask_app.route('/')
-def home():
-    return "🤖 Telegram Bot is running", 200
-
-@flask_app.route('/health')
-def health():
-    return "OK", 200
-
-# Функция запуска Flask в отдельном потоке
-def run_flask():
-    port = int(os.environ.get('PORT', 5000))
-    flask_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
-
-# Запускаем Flask в фоновом режиме
-flask_thread = threading.Thread(target=run_flask, daemon=True)
-flask_thread.start()
-print(f"🌐 Flask сервер запущен на порту {os.environ.get('PORT', 5000)}")
 # ============ КОНЕЦ: КОД ДЛЯ RENDER ============
 
 # ТВОЙ ОРИГИНАЛЬНЫЙ КОД НИЖЕ (НЕ МЕНЯТЬ!)
@@ -667,3 +643,4 @@ async def main():
     print("🚀 Starting bot polling...")
     await dp.start_polling(bot, skip_updates=True, allowed_updates=[])
     print("✅ Bot started polling - Auto-mailing READY!")
+
