@@ -1,4 +1,3 @@
-
 # ============ КОНЕЦ: КОД ДЛЯ RENDER ============
 import sys
 import os
@@ -10,11 +9,47 @@ if __name__ == "__main__" and "bot.py" in sys.argv[0]:
     print("ℹ️  On Render.com, set 'Start Command' to: python run.py")
     sys.exit(1)
 # ========================================================
+
+# ============ ПРОВЕРКА ФАЙЛОВ СЕССИИ ============
+print("🔍 CHECKING SESSION FILES ON RENDER")
+print("=" * 50)
+
+# Текущая директория
+current_dir = os.getcwd()
+print(f"Current directory: {current_dir}")
+
+# Функция для поиска файла сессии
+def find_session_file():
+    possible_paths = [
+        'user_session.session',
+        './user_session.session',
+        '/opt/render/project/src/user_session.session',
+        'user_session',
+        'user_session.session.sqlite',
+        os.path.join(current_dir, 'user_session.session'),
+        os.path.join(current_dir, 'user_session')
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            print(f"✅ FOUND session file: {path}")
+            return path
+        else:
+            print(f"  Checking: {path}... NOT FOUND")
+    
+    print("❌ NO SESSION FILES FOUND!")
+    return 'user_session'  # fallback
+
+# Находим файл сессии
+session_path = find_session_file()
+print(f"📁 Using session path: {session_path}")
+print("=" * 50)
+# ============ КОНЕЦ ПРОВЕРКИ ============
+
 # ТВОЙ ОРИГИНАЛЬНЫЙ КОД НИЖЕ (НЕ МЕНЯТЬ!)
 import asyncio
 import json
 import logging
-import os
 import re
 from datetime import datetime
 from telethon import TelegramClient
@@ -30,8 +65,8 @@ from config import Config
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize clients
-client = TelegramClient('user_session', Config.API_ID, Config.API_HASH)
+# Initialize clients with found session path
+client = TelegramClient(session_path, Config.API_ID, Config.API_HASH)
 bot = Bot(token=Config.BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
@@ -627,6 +662,10 @@ async def show_help(message: types.Message):
     await message.answer(help_text, reply_markup=get_main_keyboard())
 
 async def main():
+    print("\n" + "="*50)
+    print("🚀 STARTING BOT ON RENDER")
+    print("="*50)
+    
     # Загружаем данные
     if not os.path.exists(GROUPS_FILE):
         save_groups(groups)
@@ -641,19 +680,40 @@ async def main():
     except Exception as e:
         print(f"ℹ️ Error deleting webhook: {e}")
     
+    # Проверяем авторизацию Telethon
+    print("\n🔐 CHECKING TELETHON AUTHORIZATION")
+    try:
+        if await client.is_user_authorized():
+            me = await client.get_me()
+            print(f"✅ Telethon authorized as: {me.first_name} (@{me.username})")
+        else:
+            print("❌ Telethon NOT authorized!")
+            print("⚠️ User client will not be able to send messages!")
+    except Exception as e:
+        print(f"⚠️ Error checking Telethon authorization: {e}")
+    
     # Даем время Telegram обновить состояние
     await asyncio.sleep(2)
     
     # Запускаем user client
-    await client.start()
-    print("✅ User client started successfully")
+    print("\n🔌 STARTING USER CLIENT...")
+    try:
+        await client.start()
+        # Проверяем после старта
+        if await client.is_user_authorized():
+            me = await client.get_me()
+            print(f"✅ User client started successfully as: {me.first_name}")
+        else:
+            print("⚠️ User client started but NOT authorized - messages won't send!")
+    except Exception as e:
+        print(f"❌ Failed to start user client: {e}")
+        print("⚠️ Continuing without user client - messages won't send!")
     
     # Запускаем бота
+    print("\n🤖 STARTING TELEGRAM BOT...")
     print("🚀 Starting bot polling...")
     await dp.start_polling(bot, skip_updates=True, allowed_updates=[])
     print("✅ Bot started polling - Auto-mailing READY!")
 
-# УДАЛИТЕ весь код после этой функции!
-# НЕ ДОЛЖНО БЫТЬ никакого finally или await client.stop()
-
-
+if __name__ == '__main__':
+    asyncio.run(main())
