@@ -642,20 +642,34 @@ async def show_help(message: types.Message):
     await message.answer(help_text, reply_markup=get_main_keyboard())
 
 async def main():
-    # Load data first
+    # Загружаем данные
     if not os.path.exists(GROUPS_FILE):
         save_groups(groups)
     if not os.path.exists(SETTINGS_FILE):
         save_settings(bot_settings)
     
-    # Start user client
-    await client.start()
-    logger.info("✅ User client started successfully")
-    
-    # Start bot polling
-    await dp.start_polling(bot)
-    logger.info("✅ Bot started polling - Auto-mailing READY!")
+    # Создаем задачи для параллельного запуска
+    try:
+        # Запускаем user client
+        await client.start()
+        logger.info("✅ User client started successfully")
+        
+        # Создаем задачу для бота
+        polling_task = asyncio.create_task(dp.start_polling(bot))
+        logger.info("✅ Bot started polling - Auto-mailing READY!")
+        
+        # Ждем завершения задачи бота
+        await polling_task
+        
+    except asyncio.CancelledError:
+        # Корректно завершаем при остановке
+        logger.info("🛑 Stopping bot...")
+        await client.stop()
+        raise
+    finally:
+        # Гарантируем остановку client при любом исходе
+        await client.stop()
 
 if __name__ == '__main__':
-    # Run the bot
     asyncio.run(main())
+
