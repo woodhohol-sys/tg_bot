@@ -648,28 +648,22 @@ async def main():
     if not os.path.exists(SETTINGS_FILE):
         save_settings(bot_settings)
     
-    # Создаем задачи для параллельного запуска
+    # ОЧЕНЬ ВАЖНО: сначала останавливаем любые старые сессии
+    print("🔄 Stopping any existing bot sessions...")
     try:
-        # Запускаем user client
-        await client.start()
-        logger.info("✅ User client started successfully")
-        
-        # Создаем задачу для бота
-        polling_task = asyncio.create_task(dp.start_polling(bot))
-        logger.info("✅ Bot started polling - Auto-mailing READY!")
-        
-        # Ждем завершения задачи бота
-        await polling_task
-        
-    except asyncio.CancelledError:
-        # Корректно завершаем при остановке
-        logger.info("🛑 Stopping bot...")
-        await client.stop()
-        raise
-    finally:
-        # Гарантируем остановку client при любом исходе
-        await client.stop()
-
-if __name__ == '__main__':
-    asyncio.run(main())
-
+        await bot.delete_webhook(drop_pending_updates=True)
+        print("✅ Old webhook deleted")
+    except Exception as e:
+        print(f"ℹ️ Error deleting webhook: {e}")
+    
+    # Даем время Telegram обновить состояние
+    await asyncio.sleep(2)
+    
+    # Запускаем user client
+    await client.start()
+    print("✅ User client started successfully")
+    
+    # Запускаем бота
+    print("🚀 Starting bot polling...")
+    await dp.start_polling(bot, skip_updates=True, allowed_updates=[])
+    print("✅ Bot started polling - Auto-mailing READY!")
