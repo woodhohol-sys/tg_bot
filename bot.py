@@ -1,6 +1,15 @@
 
 # ============ КОНЕЦ: КОД ДЛЯ RENDER ============
+import sys
+import os
 
+# ============ ЗАЩИТА ОТ НЕПРАВИЛЬНОГО ЗАПУСКА ============
+if __name__ == "__main__" and "bot.py" in sys.argv[0]:
+    print("❌ ERROR: Wrong startup command!")
+    print("✅ Please use: python run.py")
+    print("ℹ️  On Render.com, set 'Start Command' to: python run.py")
+    sys.exit(1)
+# ========================================================
 # ТВОЙ ОРИГИНАЛЬНЫЙ КОД НИЖЕ (НЕ МЕНЯТЬ!)
 import asyncio
 import json
@@ -646,4 +655,5 @@ async def main():
 
 # УДАЛИТЕ весь код после этой функции!
 # НЕ ДОЛЖНО БЫТЬ никакого finally или await client.stop()
+
 
